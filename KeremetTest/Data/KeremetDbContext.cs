@@ -8,19 +8,21 @@ namespace KeremetTest.Data
 {
     public class KeremetDbContext : DbContext
     {
-        public DbSet<Client> Clients { get; set; }
-        public KeremetDbContext(DbContextOptions<KeremetDbContext> options)
-            : base(options)
+        private readonly string _connectionString;
+        public DbSet<Client> Clients { get; set; }        
+
+        public KeremetDbContext(string connectionString)
         {
-        }
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        {
-            //
-            optionsBuilder.UseSqlServer(@"Server=DORON-PC\\SQLEXPRESS; Database = Keremet; Integrated Security=True;");
+            _connectionString = connectionString;
+            Database.EnsureCreated();
         }
 
-    }
+        protected override void OnConfiguring(DbContextOptionsBuilder builder)
+            => builder.UseSqlServer(_connectionString);
+    }    
 
 }
+
+
 
 
