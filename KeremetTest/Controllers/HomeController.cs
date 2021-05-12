@@ -1,13 +1,11 @@
 ﻿using KeremetTest.Data;
+using KeremetTest.Helper;
 using KeremetTest.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace KeremetTest.Controllers
@@ -16,11 +14,13 @@ namespace KeremetTest.Controllers
     {
         private readonly ILogger<HomeController> _logger;
         protected readonly KeremetDbContext db;
-       
-        public HomeController(ILogger<HomeController> logger, IConfiguration configuration)
+        protected readonly IExcelHelper _excelHelper;
+
+        public HomeController(ILogger<HomeController> logger, IConfiguration configuration, IExcelHelper excelHelper)
         {
             _logger = logger;
             db = new KeremetDbContext(configuration["ConnectionString"]);
+            _excelHelper = excelHelper;
         }
 
         public IActionResult Index()
@@ -35,9 +35,17 @@ namespace KeremetTest.Controllers
         [HttpPost]
         public async Task<ActionResult> ExportToExel(ClientVM model)
         {
-            var result = await db.Clients.FirstOrDefaultAsync(m => m.SocialNumber == model.SocialNumber);
-           
-            return View();
+            var client = await db.Clients.FirstOrDefaultAsync(m => m.SocialNumber == model.SocialNumber);
+            if (client != null)
+            {
+                _excelHelper.Export(client);
+                TempData["SuccessMessage"] = $"Документ {model.SocialNumber}.xlsx успешно сохранен в папку проекта Result";
+            }
+            else 
+            {
+                TempData["SuccessMessage"] = $"Клиент не найден";                
+            }
+            return View(model);
         }
         public IActionResult Error()
         {
